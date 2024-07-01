@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from fame.models import Fame, FameLevels
+from fame.models import Fame, FameLevels, ExpertiseAreas
 from socialnetwork.models import Posts, SocialNetworkUsers
 
 # general methods independent of html and REST views
@@ -111,7 +111,36 @@ def submit_post(
 
 
     #########################
-    # add your code here
+
+    #we get the negative expertise areas of the user
+    negative_fame_areas = Fame.objects.filter(
+        user = user,
+        expertise_area__in = [area['expertise_area'] for area in _expertise_areas],
+        fame_level__numeric_value__lt=0
+    )
+
+    #now we check if any of the negative expertise areas of the user, coincide with the tags of the post.
+    #If it does set the published to false, do not post.
+    if negative_fame_areas.exists():
+        post.published = False
+
+    ##Todo: check if the user had the fame area (that is negative in the post): if there is, lessen; if isnt, make confused
+
+    ##this is the efforts for T2a, not working
+    if _at_least_one_expertise_area_contains_bullshit:
+        for area in _expertise_areas:
+            if area['expertise_area'] in negative_fame_areas:
+                try:
+                    user.expertise_area = negative_fame_areas[area['expertise_area']].fame_level.get_next_lower_fame_level()
+
+                finally:
+                    if user.expertise_area not in negative_fame_areas:
+                        Fame.objects.create(
+                            user=user,
+                            expertise_area=area['expertise_area'],
+                            fame_level=area['Confuser'],
+                        )
+
     #########################
 
     post.save()
@@ -121,7 +150,6 @@ def submit_post(
         _expertise_areas,
         redirect_to_logout,
     )
-
 
 def rate_post(
     user: SocialNetworkUsers, post: Posts, rating_type: str, rating_score: int
