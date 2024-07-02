@@ -1,7 +1,8 @@
 from django.db.models import Q
 
 from fame.models import Fame, FameLevels, ExpertiseAreas
-from socialnetwork.models import Posts, SocialNetworkUsers
+from socialnetwork.models import Posts, SocialNetworkUsers, PostExpertiseAreasAndRatings
+
 
 # general methods independent of html and REST views
 # should be used by REST and html views
@@ -115,7 +116,7 @@ def submit_post(
     #we get the negative expertise areas of the user
     negative_fame_areas = Fame.objects.filter(
         user = user,
-        expertise_area__in = [area['expertise_area'] for area in _expertise_areas],
+        expertise_area__in = [area["expertise_area"] for area in _expertise_areas],
         fame_level__numeric_value__lt=0
     )
 
@@ -124,22 +125,42 @@ def submit_post(
     if negative_fame_areas.exists():
         post.published = False
 
-    ##Todo: check if the user had the fame area (that is negative in the post): if there is, lessen; if isnt, make confused
 
     ##this is the efforts for T2a, not working
     if _at_least_one_expertise_area_contains_bullshit:
         for area in _expertise_areas:
-            if area['expertise_area'] in negative_fame_areas:
+            #have to use this 'area[asdasd] and', otherwise it says it has NoneType
+            if area['truth_rating'] and area['truth_rating'].numeric_value < 0:
                 try:
-                    user.expertise_area = negative_fame_areas[area['expertise_area']].fame_level.get_next_lower_fame_level()
+                    # Get the user's fame entry for this expertise area
+                    fame_entry = Fame.objects.get(user=user, expertise_area=area['expertise_area'])
 
+                    # Lower the fame level if possible
+                    fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
+                    fame_entry.save()
+
+                except Fame.DoesNotExist:#if this fame are didnt exist for the user
+                    fame_entry = Fame.objects.create(
+                        user=user,
+                        expertise_area=area['expertise_area'],
+                        fame_level= FameLevels.objects.get(name="Confuser"),
+                        #we create a new fame object, which is assigned to user that is confuser
+                    )
+                    fame_entry.save()
+                except ValueError:#if we cant get any lower -> user should be banned
+                    user.is_banned = True
+                    user.is_active = False
+                    redirect_to_logout = True
+                    user.save()
+                    posts_of_the_banned = Posts.objects.filter(
+                        author=user,
+                        published=True,
+                    )
+                    for posts in posts_of_the_banned:
+                        posts.published = False
+                        posts.save()
                 finally:
-                    if user.expertise_area not in negative_fame_areas:
-                        Fame.objects.create(
-                            user=user,
-                            expertise_area=area['expertise_area'],
-                            fame_level=area['Confuser'],
-                        )
+                    pass
 
     #########################
 

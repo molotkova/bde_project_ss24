@@ -315,7 +315,7 @@ class StudentTasksTests(TestCase):
         # call the endpoint to check whether it logs out the user
         self._user_is_banned_test(use_DRF_endpoint=True)
 
-    def _test_T2c_3(self):  # implemented and tested
+    def test_T2c_3(self):  # implemented and tested
         # disallowing him/her to ever login again.
         user = self._user_is_banned_test()
         login = self.client.login(email=user.email, password="test")
