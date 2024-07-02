@@ -242,7 +242,6 @@ def bullshitters():
     there is a tie, within that tie sort by date_joined (most recent first). Note that expertise areas with no expert
     may be omitted.
     """
-    pass
     #########################
 
     filter_condition = Q(fame_level__numeric_value__lt=0)
