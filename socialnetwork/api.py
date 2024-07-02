@@ -142,17 +142,13 @@ def submit_post(
                     fame_entry.save()
 
                 except Fame.DoesNotExist:
-                    #if this fame are didnt exist for the user
                     fame_entry = Fame.objects.create(
                         user=user,
                         expertise_area=area['expertise_area'],
                         fame_level= FameLevels.objects.get(name="Confuser"),
-                        #we create a new fame object, which is assigned to user that is confuser
                     )
                     fame_entry.save()
                 except ValueError:
-                    #if we cant get any lower -> user should be banned
-
                     user.is_banned = True
                     user.is_active = False
                     redirect_to_logout = True
@@ -166,6 +162,9 @@ def submit_post(
                         posts.save()
                 finally:
                     pass
+                    # Lower the fame level if possible
+                    fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
+                    fame_entry.save()
 
     #########################
 
