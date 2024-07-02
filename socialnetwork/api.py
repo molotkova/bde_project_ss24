@@ -3,6 +3,8 @@ from django.db.models import Q
 from fame.models import Fame, FameLevels, ExpertiseAreas
 from socialnetwork.models import Posts, SocialNetworkUsers
 
+from collections import defaultdict
+
 # general methods independent of html and REST views
 # should be used by REST and html views
 
@@ -112,19 +114,19 @@ def submit_post(
 
     #########################
 
-    #we get the negative expertise areas of the user
+    # We get the negative expertise areas of the user
     negative_fame_areas = Fame.objects.filter(
         user = user,
         expertise_area__in = [area['expertise_area'] for area in _expertise_areas],
         fame_level__numeric_value__lt=0
     )
 
-    #now we check if any of the negative expertise areas of the user, coincide with the tags of the post.
-    #If it does set the published to false, do not post.
+    # Check if any of the negative expertise areas of the user coincide with the tags of the post.
+    # If it does set the published to false, i.e. do not post.
     if negative_fame_areas.exists():
         post.published = False
 
-    ##Todo: check if the user had the fame area (that is negative in the post): if there is, lessen; if isnt, make confused
+    # TODO: check if the user had the fame area (that is negative in the post): if there is, lessen; if isnt, make confused
 
     ##this is the efforts for T2a, not working
     if _at_least_one_expertise_area_contains_bullshit:
@@ -201,9 +203,13 @@ def experts():
     there is a tie, within that tie sort by date_joined (most recent first). Note that expertise areas with no expert
     may be omitted.
     """
-    pass
     #########################
-    # add your code here
+
+    filter_condition = Q(fame_level__numeric_value__gt=0)
+    sorting_key = lambda x: (-x['fame_level_numeric'], -x['user'].date_joined.timestamp())
+
+    return get_experts_and_bulshitters(filter_condition=filter_condition, sorting_key=sorting_key)
+
     #########################
 
 
@@ -217,6 +223,35 @@ def bullshitters():
     """
     pass
     #########################
-    # add your code here
+
+    filter_condition = Q(fame_level__numeric_value__lt=0)
+    sorting_key = lambda x: (x['fame_level_numeric'], -x['user'].date_joined.timestamp())
+
+    return get_experts_and_bulshitters(filter_condition=filter_condition, sorting_key=sorting_key)
     #########################
 
+
+def get_experts_and_bulshitters(filter_condition, sorting_key):
+
+    # Dictionary to store the result
+    areas_experts = defaultdict(list)
+
+    # Query Fame with positive fame levels and include related objects in a single query
+    fame_entries = Fame.objects.filter(filter_condition)
+
+    for fame in fame_entries:
+        areas_experts[fame.expertise_area].append({
+            'user': fame.user,
+            'fame_level_numeric': fame.fame_level.numeric_value,
+        })
+
+    # Sorting users within each expertise area
+    result = {}
+    for area, experts in areas_experts.items():
+        sorted_experts = sorted(
+            experts, 
+            key=sorting_key
+        )
+        result[area] = sorted_experts
+
+    return result
