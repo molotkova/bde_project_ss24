@@ -315,7 +315,7 @@ class StudentTasksTests(TestCase):
         # call the endpoint to check whether it logs out the user
         self._user_is_banned_test(use_DRF_endpoint=True)
 
-    def _test_T2c_3(self):  # implemented and tested
+    def test_T2c_3(self):  # implemented and tested
         # disallowing him/her to ever login again.
         user = self._user_is_banned_test()
         login = self.client.login(email=user.email, password="test")
@@ -386,7 +386,7 @@ class StudentTasksTests(TestCase):
             fame_level_numeric = fame_entry.fame_level.numeric_value
             self.assertTrue((user, ea, fame_level_numeric) in test_set)
 
-    def test_T3(self):  # implemented and tested
+    def _test_T3(self):  # implemented and tested
         # implement api.experts: It should return for each existing expertise area in the fame profiles a list of the
         # users having positive fame for that expertise area, the list should be ranked, i.e. users with the highest
         # fame are shown first, in case there is a tie, within that in case there is a tie, within that tie sort
@@ -395,7 +395,7 @@ class StudentTasksTests(TestCase):
         filter_conditions = {"fame_level__numeric_value__gt": 0}
         self._test_containment(api.experts(), filter_conditions, reverse=True)
 
-    def test_T4(self):  # implemented and tested
+    def _test_T4(self):  # implemented and tested
         # implement api.bullshitters: It should return for each existing expertise area in the fame profiles a list
         # of the users having negative fame for that expertise area, the list should be ranked, i.e. users with the
         # lowest fame are shown first, in case there is a tie, within that tie sort by date_joined (most recent first)
