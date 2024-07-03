@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.db.models import Q
 
 from fame.models import Fame, FameLevels, ExpertiseAreas
@@ -139,7 +141,8 @@ def submit_post(
                     fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
                     fame_entry.save()
 
-                except Fame.DoesNotExist:#if this fame are didnt exist for the user
+                except Fame.DoesNotExist:
+                    #if this fame are didnt exist for the user
                     fame_entry = Fame.objects.create(
                         user=user,
                         expertise_area=area['expertise_area'],
@@ -147,7 +150,9 @@ def submit_post(
                         #we create a new fame object, which is assigned to user that is confuser
                     )
                     fame_entry.save()
-                except ValueError:#if we cant get any lower -> user should be banned
+                except ValueError:
+                    #if we cant get any lower -> user should be banned
+
                     user.is_banned = True
                     user.is_active = False
                     redirect_to_logout = True
@@ -222,9 +227,13 @@ def experts():
     there is a tie, within that tie sort by date_joined (most recent first). Note that expertise areas with no expert
     may be omitted.
     """
-    pass
     #########################
-    # add your code here
+
+    filter_condition = Q(fame_level__numeric_value__gt=0)
+    sorting_key = lambda x: (-x['fame_level_numeric'], -x['user'].date_joined.timestamp())
+
+    return get_experts_and_bulshitters(filter_condition=filter_condition, sorting_key=sorting_key)
+
     #########################
 
 
@@ -236,8 +245,36 @@ def bullshitters():
     there is a tie, within that tie sort by date_joined (most recent first). Note that expertise areas with no expert
     may be omitted.
     """
-    pass
-    #########################
-    # add your code here
     #########################
 
+    filter_condition = Q(fame_level__numeric_value__lt=0)
+    sorting_key = lambda x: (x['fame_level_numeric'], -x['user'].date_joined.timestamp())
+
+    return get_experts_and_bulshitters(filter_condition=filter_condition, sorting_key=sorting_key)
+    #########################
+
+
+def get_experts_and_bulshitters(filter_condition, sorting_key):
+
+    # Dictionary to store the result
+    areas_experts = defaultdict(list)
+
+    # Query Fame with positive fame levels and include related objects in a single query
+    fame_entries = Fame.objects.filter(filter_condition)
+
+    for fame in fame_entries:
+        areas_experts[fame.expertise_area].append({
+            'user': fame.user,
+            'fame_level_numeric': fame.fame_level.numeric_value,
+        })
+
+    # Sorting users within each expertise area
+    result = {}
+    for area, experts in areas_experts.items():
+        sorted_experts = sorted(
+            experts,
+            key=sorting_key
+        )
+        result[area] = sorted_experts
+
+    return result
