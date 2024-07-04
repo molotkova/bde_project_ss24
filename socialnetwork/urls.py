@@ -7,5 +7,7 @@ app_name = "socialnetwork"
 
 urlpatterns = [
     path("api/posts", PostsListApiView.as_view(), name="posts_fulllist"),
+    path("api/posts/experts", PostsListApiView.as_view(), name="posts_fulllist"),
+    path("api/posts/bullshitters", PostsListApiView.as_view(), name="posts_fulllist"),
     path("html/timeline", timeline, name="timeline"),
 ]
