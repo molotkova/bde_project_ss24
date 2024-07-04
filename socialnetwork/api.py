@@ -1,10 +1,10 @@
-from collections import defaultdict
-
 from django.db.models import Q
 
 from fame.models import Fame, FameLevels, ExpertiseAreas
 from socialnetwork.models import Posts, SocialNetworkUsers, PostExpertiseAreasAndRatings
 
+
+from collections import defaultdict
 
 # general methods independent of html and REST views
 # should be used by REST and html views
@@ -115,15 +115,15 @@ def submit_post(
 
     #########################
 
-    #we get the negative expertise areas of the user
+    # We get the negative expertise areas of the user
     negative_fame_areas = Fame.objects.filter(
         user = user,
         expertise_area__in = [area["expertise_area"] for area in _expertise_areas],
         fame_level__numeric_value__lt=0
     )
 
-    #now we check if any of the negative expertise areas of the user, coincide with the tags of the post.
-    #If it does set the published to false, do not post.
+    # Check if any of the negative expertise areas of the user coincide with the tags of the post.
+    # If it does set the published to false, i.e. do not post.
     if negative_fame_areas.exists():
         post.published = False
 
@@ -141,14 +141,15 @@ def submit_post(
                     fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
                     fame_entry.save()
 
-                except Fame.DoesNotExist:
+                except Fame.DoesNotExist:#if this fame are didnt exist for the user
                     fame_entry = Fame.objects.create(
                         user=user,
                         expertise_area=area['expertise_area'],
                         fame_level= FameLevels.objects.get(name="Confuser"),
+                        #we create a new fame object, which is assigned to user that is confuser
                     )
                     fame_entry.save()
-                except ValueError:
+                except ValueError:#if we cant get any lower -> user should be banned
                     user.is_banned = True
                     user.is_active = False
                     redirect_to_logout = True
@@ -162,9 +163,6 @@ def submit_post(
                         posts.save()
                 finally:
                     pass
-                    # Lower the fame level if possible
-                    fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
-                    fame_entry.save()
 
     #########################
 
