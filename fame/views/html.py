@@ -55,3 +55,20 @@ def experts_list(request):
 
     ## then here we fill in the experts.html template with data from the context dict above
     return render(request, "experts.html", context=context)
+
+@require_http_methods(["GET"])
+@login_required
+## define bullshitters_list func that handles requests to view bullshitters list on the hmtl
+def bullshitters_list(request):
+    ## get the list of bullshitters using bullshitters() func from api.py
+    bullshitters = api.bullshitters()
+
+
+    ## we then create a context dict with the list of bullshitters
+    context = {
+        "bullshitters": bullshitters,
+    }
+
+
+    ## then here we fill in the bullshitters.html template with data from the context dict above
+    return render(request, "bullshitters.html", context=context)
