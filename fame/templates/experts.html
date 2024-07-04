@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %}Experts{% endblock %}
+
+
+{% block body %}
+
+
+    <style>
+
+
+    </style>
+    <br>
+    <h2>Hall of Experts</h2>
+    <br>
+    {% for area, experts in experts.items %}
+        <h3>{{ area.label }}</h3>
+        <ul>
+            {% for expert in experts %}
+                <li>{{ expert.user.first_name}} {{expert.user.last_name }}: {{ expert.fame_level_numeric }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+    <br><br>
+{% endblock %}

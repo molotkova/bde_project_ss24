@@ -269,7 +269,7 @@ def get_experts_and_bulshitters(filter_condition, sorting_key):
     result = {}
     for area, experts in areas_experts.items():
         sorted_experts = sorted(
-            experts, 
+            experts,
             key=sorting_key
         )
         result[area] = sorted_experts
