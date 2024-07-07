@@ -229,7 +229,7 @@ def experts():
     filter_condition = Q(fame_level__numeric_value__gt=0)
     sorting_key = lambda x: (-x['fame_level_numeric'], -x['user'].date_joined.timestamp())
 
-    return get_experts_and_bulshitters(filter_condition=filter_condition, sorting_key=sorting_key)
+    return get_experts_and_bullshitters(filter_condition=filter_condition, sorting_key=sorting_key)
 
     #########################
 
@@ -247,11 +247,11 @@ def bullshitters():
     filter_condition = Q(fame_level__numeric_value__lt=0)
     sorting_key = lambda x: (x['fame_level_numeric'], -x['user'].date_joined.timestamp())
 
-    return get_experts_and_bulshitters(filter_condition=filter_condition, sorting_key=sorting_key)
+    return get_experts_and_bullshitters(filter_condition=filter_condition, sorting_key=sorting_key)
     #########################
 
 
-def get_experts_and_bulshitters(filter_condition, sorting_key):
+def get_experts_and_bullshitters(filter_condition, sorting_key):
 
     # Dictionary to store the result
     areas_experts = defaultdict(list)
